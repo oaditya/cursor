@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor Animation</title>
+    <style>
+        body, html {
+            padding: 0;
+            margin: 0;
+            overscroll-behavior: none;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let lines = [];
+        const pointer = { x: canvas.width / 2, y: canvas.height / 2, px: canvas.width / 2, py: canvas.height / 2, moved: false };
+        const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+
+        function Line(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.px = x;
+            this.py = y;
+            this.vx = 0;
+            this.vy = 0;
+            this.color = color;
+            this.angle = Math.random() * Math.PI * 2;
+        }
+
+        function setup() {
+            for (let i = 0; i < 30; i++) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                lines.push(new Line(pointer.x, pointer.y, color));
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            lines.forEach(line => {
+                ctx.beginPath();
+                ctx.moveTo(line.px, line.py);
+                ctx.lineTo(line.x, line.y);
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                line.px = line.x;
+                line.py = line.y;
+
+                if (pointer.moved) {
+                    const dx = pointer.x - line.x;
+                    const dy = pointer.y - line.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+
+                    line.vx += (dx / dist) * 0.5;
+                    line.vy += (dy / dist) * 0.5;
+                } else {
+                    line.angle += 0.05;
+                    line.vx = Math.cos(line.angle) * 2;
+                    line.vy = Math.sin(line.angle) * 2;
+                }
+
+                line.vx *= 0.95;
+                line.vy *= 0.95;
+
+                line.x += line.vx;
+                line.y += line.vy;
+            });
+
+            pointer.px = pointer.x;
+            pointer.py = pointer.y;
+            pointer.moved = false;
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            pointer.x = e.clientX;
+            pointer.y = e.clientY;
+            pointer.moved = true;
+        });
+
+        setup();
+        draw();
+    </script>
+</body>
+</html>
